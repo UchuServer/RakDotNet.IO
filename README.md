@@ -12,6 +12,6 @@ This library includes various utilities useful for other projects.
 - C# 7.2 Span ready
 - Changing endianness on-the-go
 
-# License
+## License
 
 This project is licensed under the LGPL version 3, please see LICENSE for the full license.

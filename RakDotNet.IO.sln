@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29102.190
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RakDotNet.IO.Example", "RakDotNet.IO.Example\RakDotNet.IO.Example.csproj", "{7CB96160-0041-4672-B1F0-7C82A66F5AFE}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RakDotNet.IO", "RakDotNet.IO\RakDotNet.IO.csproj", "{E3DF7D33-9250-4A4F-9BA2-1DF4961A3652}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{7CB96160-0041-4672-B1F0-7C82A66F5AFE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7CB96160-0041-4672-B1F0-7C82A66F5AFE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7CB96160-0041-4672-B1F0-7C82A66F5AFE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7CB96160-0041-4672-B1F0-7C82A66F5AFE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E3DF7D33-9250-4A4F-9BA2-1DF4961A3652}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E3DF7D33-9250-4A4F-9BA2-1DF4961A3652}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E3DF7D33-9250-4A4F-9BA2-1DF4961A3652}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E3DF7D33-9250-4A4F-9BA2-1DF4961A3652}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {4FCB3A1C-AFC3-42F2-A68C-090C4A6ACE36}
+	EndGlobalSection
+EndGlobal

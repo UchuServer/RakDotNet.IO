@@ -77,8 +77,12 @@ namespace RakDotNet.IO
                 // offset in bits, in case we're not starting on the 8th (i = 7) bit
                 var bitOffset = (byte)(_pos & 7);
 
-                // read the last byte from the stream 
+                // read the last byte from the stream
                 var val = _stream.ReadByte();
+
+                // don't go back if we haven't actually read anything
+                if (val != -1)
+                    _stream.Position--;
 
                 // ReadByte returns -1 if we reached the end of the stream, we need unsigned data so set it to 0
                 if (val < 0)
@@ -135,14 +139,14 @@ namespace RakDotNet.IO
                     return bufSize;
                 }
 
-                // allocate a buffer on the stack to write 
+                // allocate a buffer on the stack to write
                 Span<byte> bytes = stackalloc byte[byteCount];
 
                 // we might already have data in the stream
-                _stream.Position -= _stream.Read(bytes);
+                var readSize = _stream.Read(bytes);
 
-                if (bitOffset != 0)
-                    _stream.Position++;
+                // subtract the read bytes from the position so we can write them later
+                _stream.Position -= readSize;
 
                 for (var i = 0; bits > 0; i++)
                 {
@@ -172,8 +176,8 @@ namespace RakDotNet.IO
                 // write the buffer
                 _stream.Write(bytes);
 
-                // add written byte count to the position of the stream
-                _stream.Position += bufSize;
+                // roll back the position in case we haven't used the last byte fully
+                _stream.Position -= (byteCount - bufSize);
             }
 
             return bufSize;

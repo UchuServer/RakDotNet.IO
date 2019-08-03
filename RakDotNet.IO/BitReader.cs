@@ -79,7 +79,10 @@ namespace RakDotNet.IO
                 var val = _stream.ReadByte();
 
                 _pos++;
-                _stream.Position--;
+
+                // if we aren't ending on a new byte, go back 1 byte on the stream
+                if ((_pos & 7) != 0)
+                    _stream.Position--;
 
                 return (val & (0x80 >> (byte)(_pos & 7))) != 0;
             }
@@ -97,7 +100,7 @@ namespace RakDotNet.IO
             var byteCount = (int)Math.Ceiling((bits + bitOffset) / 8d);
 
             // get size of output buffer
-            var bufSize = (int)Math.Ceiling(bits / 8d);  
+            var bufSize = (int)Math.Ceiling(bits / 8d);
 
             // lock the read so we don't mess up other calls
             lock (_lock)

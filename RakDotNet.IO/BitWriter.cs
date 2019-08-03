@@ -83,22 +83,25 @@ namespace RakDotNet.IO
                 // don't go back if we haven't actually read anything
                 if (val != -1)
                     _stream.Position--;
-
-                // ReadByte returns -1 if we reached the end of the stream, we need unsigned data so set it to 0
-                if (val < 0)
+                else // ReadByte returns -1 if we reached the end of the stream, we need unsigned data so set it to 0
                     val = 0;
 
-                // if we're starting on a new byte, write 0x80 (0b10000000), else shift the bit we want to write to the right by bitOffset
-                var bitVal = (byte)((bitOffset == 0) ? 0x80 : (0x80 >> bitOffset));
-
-                // we use bitwise OR if we want to set bits to 1, bitwise XOR if we want to set it to 0
                 if (bit)
-                    val |= bitVal;
-                else
-                    val ^= bitVal;
+                {
+                    // if we're setting, shift 0x80 (10000000) to the right by bitOffset
+                    var mask = (byte)(0x80 >> bitOffset);
 
-                // go back 1 byte to overwrite the previously written byte
-                //_stream.Position--;
+                    // we set the bit using our mask and bitwise OR
+                    val |= mask;
+                }
+                else
+                {
+                    // hacky mask
+                    var mask = (byte)(1 << (-(bitOffset + 1) & 7));
+
+                    // unset using bitwise AND and bitwise NOT on the mask
+                    val &= ~mask;
+                }
 
                 // write the modified byte to the stream
                 _stream.WriteByte((byte)val);

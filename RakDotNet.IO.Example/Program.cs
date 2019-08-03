@@ -12,6 +12,12 @@ namespace RakDotNet.Example
 
             using (var writer = new BitWriter(stream))
             {
+                var inputInt = 42;
+
+                Console.WriteLine($"Input (int) = {inputInt}");
+
+                writer.Write(inputInt);
+
                 var input = long.MaxValue;
 
                 Console.WriteLine($"Input (long) = {input}");
@@ -24,6 +30,12 @@ namespace RakDotNet.Example
 
                 writer.WriteBit(inBit);
 
+                var inBit2 = false;
+
+                Console.WriteLine($"Input (bit) = {inBit2}");
+
+                writer.WriteBit(inBit2);
+
                 var inFloat = float.MaxValue;
 
                 Console.WriteLine($"Input (float) = {inFloat}");
@@ -33,6 +45,10 @@ namespace RakDotNet.Example
 
             using (var reader = new BitReader(stream))
             {
+                var outInt = reader.Read<int>();
+
+                Console.WriteLine($"Out    (int) = {outInt}");
+
                 var output = reader.Read<long>();
 
                 Console.WriteLine($"Out   (long) = {output}");
@@ -40,6 +56,10 @@ namespace RakDotNet.Example
                 var outBit = reader.ReadBit();
 
                 Console.WriteLine($"Out   (bit) = {outBit}");
+
+                var outBit2 = reader.ReadBit();
+
+                Console.WriteLine($"Out   (bit) = {outBit2}");
 
                 var outFloat = reader.Read<float>();
 

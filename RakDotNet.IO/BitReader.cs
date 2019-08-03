@@ -78,13 +78,11 @@ namespace RakDotNet.IO
             {
                 var val = _stream.ReadByte();
 
-                _pos++;
-
                 // if we aren't ending on a new byte, go back 1 byte on the stream
-                if ((_pos & 7) != 0)
+                if (((_pos + 1) & 7) != 0)
                     _stream.Position--;
 
-                return (val & (0x80 >> (byte)(_pos & 7))) != 0;
+                return (val & (0x80 >> (byte)(_pos++ & 7))) != 0;
             }
         }
 

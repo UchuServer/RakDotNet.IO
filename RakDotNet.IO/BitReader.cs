@@ -38,7 +38,7 @@ namespace RakDotNet.IO
         public virtual bool CanChangeEndianness => !_orderLocked;
         public virtual long Position => _pos;
 
-        public BitReader(Stream stream, Endianness endianness = Endianness.LittleEndian, bool orderLocked = true, bool leaveOpen = true)
+        public BitReader(Stream stream, Endianness endianness = Endianness.LittleEndian, bool orderLocked = true, bool leaveOpen = false)
         {
             if (!stream.CanRead)
                 throw new ArgumentException("Stream is not readable", nameof(stream));

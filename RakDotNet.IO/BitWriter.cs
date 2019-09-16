@@ -37,7 +37,7 @@ namespace RakDotNet.IO
         public virtual bool CanChangeEndianness => !_orderLocked;
         public virtual long Position => _pos;
 
-        public BitWriter(Stream stream, Endianness endianness = Endianness.LittleEndian, bool orderLocked = true, bool leaveOpen = true)
+        public BitWriter(Stream stream, Endianness endianness = Endianness.LittleEndian, bool orderLocked = true, bool leaveOpen = false)
         {
             if (!stream.CanWrite)
                 throw new ArgumentException("Stream is not writeable", nameof(stream));

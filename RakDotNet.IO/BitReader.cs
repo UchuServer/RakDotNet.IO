@@ -181,5 +181,8 @@ namespace RakDotNet.IO
 
         public virtual T Read<T>() where T : struct
             => Read<T>(Marshal.SizeOf<T>() * 8);
+
+        public virtual void ReadDeserializable(IDeserializable deserializable)
+            => deserializable.Deserialize(this);
     }
 }

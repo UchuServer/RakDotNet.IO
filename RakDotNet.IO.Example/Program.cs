@@ -10,7 +10,7 @@ namespace RakDotNet.Example
         {
             var stream = new MemoryStream(100);
 
-            using (var writer = new BitWriter(stream))
+            using (var writer = new BitWriter(stream, leaveOpen: true))
             {
                 var inputInt = 42;
 

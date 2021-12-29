@@ -2,6 +2,16 @@
 
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
+
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <PackageId>RakDotNet.IO</PackageId>
+    <PackageVersion>1.0.1</PackageVersion>
+    <Authors>UchuServer;yuwui</Authors>
+    <Description>Bit-level reads and writes library.</Description>
+    <PackageProjectUrl>https://github.com/UchuServer/RakDotNet.IO</PackageProjectUrl>
+    <PackageLicensingExpression>LGPL-3.0-only</PackageLicensingExpression>
+    <RepositoryUrl>https://github.com/UchuServer/RakDotNet.IO</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
   </PropertyGroup>
 
 </Project>

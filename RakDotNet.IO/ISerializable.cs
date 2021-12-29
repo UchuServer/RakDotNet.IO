@@ -1,6 +1,4 @@
-﻿using System.IO;
-
-namespace RakDotNet.IO
+﻿namespace RakDotNet.IO
 {
     public interface ISerializable
     {

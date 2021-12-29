@@ -57,12 +57,17 @@ namespace RakDotNet.IO
 
         protected virtual void Dispose(bool disposing)
         {
-            if (disposing)
+            if (!_disposed)
             {
-                if (_leaveOpen)
-                    _stream.Flush();
-                else
-                    _stream.Close();
+                if (disposing)
+                {
+                    if (_leaveOpen)
+                        _stream.Flush();
+                    else
+                        _stream.Close();
+                }
+
+                _disposed = true;
             }
         }
 

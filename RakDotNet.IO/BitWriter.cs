@@ -208,6 +208,7 @@ namespace RakDotNet.IO
 
             Marshal.StructureToPtr<T>(val, ptr, false);
             Marshal.Copy(ptr, buf, 0, size);
+            Marshal.FreeHGlobal(ptr);
 
             return Write(new ReadOnlySpan<byte>(buf), bits);
         }

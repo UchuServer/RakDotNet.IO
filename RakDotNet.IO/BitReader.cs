@@ -9,6 +9,7 @@ namespace RakDotNet.IO
         private readonly Stream _stream;
         private readonly bool _leaveOpen;
         private readonly bool _orderLocked;
+        private readonly bool _positionLocked;
         private readonly object _lock;
 
         private Endianness _endianness;
@@ -36,9 +37,22 @@ namespace RakDotNet.IO
             }
         }
         public virtual bool CanChangeEndianness => !_orderLocked;
-        public virtual long Position => _pos;
+        public virtual long Position
+        {
+            get => _pos;
+            set
+            {
+                if (_positionLocked)
+                    throw new InvalidOperationException("Position is locked");
 
-        public BitReader(Stream stream, Endianness endianness = Endianness.LittleEndian, bool orderLocked = true, bool leaveOpen = false)
+                lock (_lock)
+                    _pos = value;
+            }
+        }
+        public virtual long BytePosition => (long) Math.Floor(Position / 8d);
+
+        public BitReader(Stream stream, Endianness endianness = Endianness.LittleEndian, bool orderLocked = true,
+                bool leaveOpen = false, bool positionLocked = true, long startOffset = 0)
         {
             if (!stream.CanRead)
                 throw new ArgumentException("Stream is not readable", nameof(stream));
@@ -46,15 +60,22 @@ namespace RakDotNet.IO
             _stream = stream;
             _leaveOpen = leaveOpen;
             _orderLocked = orderLocked;
+            _positionLocked = positionLocked;
             _lock = new object();
 
             _endianness = endianness;
             _disposed = false;
-            _pos = 0;
+            _pos = startOffset;
 
             // set the stream position back to 0 if this is a read+write stream
+            // FIXME: save this internally and set when we need to read so we don't potentially mess with operations outside of the bitreader
             if (_stream.CanWrite)
-                _stream.Position = 0;
+            {
+                if (startOffset > 7)
+                    _stream.Position = (long)Math.Floor(startOffset / 8d);
+                else
+                    _stream.Position = 0;
+            }
         }
 
         protected virtual void Dispose(bool disposing)
@@ -109,11 +130,6 @@ namespace RakDotNet.IO
                 // read from the Stream to the buf on the stack
                 _stream.Read(bytes);
 
-                // swap endianness in case we're not using same endianness as host
-                if ((_endianness != Endianness.LittleEndian && BitConverter.IsLittleEndian) ||
-                    (_endianness != Endianness.BigEndian && !BitConverter.IsLittleEndian))
-                    bytes.Reverse();
-
                 // check if we don't have to do complex bit level operations
                 if (bitOffset == 0 && (bits & 7) == 0)
                 {
@@ -150,6 +166,11 @@ namespace RakDotNet.IO
                 _stream.Position -= (byteCount - bufSize);
             }
 
+            // swap endianness in case we're not using same endianness as host
+            if ((_endianness != Endianness.LittleEndian && BitConverter.IsLittleEndian) ||
+                (_endianness != Endianness.BigEndian && !BitConverter.IsLittleEndian))
+                buf.Reverse();
+
             // return the buffer length
             return bufSize;
         }
@@ -184,5 +205,26 @@ namespace RakDotNet.IO
 
         public virtual void ReadDeserializable(IDeserializable deserializable)
             => deserializable.Deserialize(this);
+
+        public virtual void AlignRead(bool startAlign = false)
+        {
+            if ((_pos & 7) != 0)
+            {
+                lock (_lock)
+                {
+                    if (!startAlign)
+                    {
+                        _pos = (long)Math.Ceiling(_pos / 8d) * 8;
+
+                        _stream.Position++;
+                    }
+                    else
+                    {
+                        _pos = (long)Math.Floor(_pos / 8d) * 8;
+                    }
+                }
+            }
+        }
     }
 }
+

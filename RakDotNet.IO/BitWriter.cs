@@ -9,6 +9,7 @@ namespace RakDotNet.IO
         private readonly Stream _stream;
         private readonly bool _leaveOpen;
         private readonly bool _orderLocked;
+        private readonly bool _positionLocked;
         private readonly object _lock;
 
         private Endianness _endianness;
@@ -24,20 +25,28 @@ namespace RakDotNet.IO
                 if (_orderLocked)
                     throw new InvalidOperationException("Endianness is fixed");
 
-                if (value != _endianness)
-                {
-                    // wait for write operations to complete so we don't mess them up
-                    lock (_lock)
-                    {
-                        _endianness = value;
-                    }
-                }
+                // wait for write operations to complete so we don't mess them up
+                lock (_lock)
+                    _endianness = value;
             }
         }
         public virtual bool CanChangeEndianness => !_orderLocked;
-        public virtual long Position => _pos;
+        public virtual long Position
+        {
+            get => _pos;
+            set
+            {
+                if (_positionLocked)
+                    throw new InvalidOperationException("Position is locked");
 
-        public BitWriter(Stream stream, Endianness endianness = Endianness.LittleEndian, bool orderLocked = true, bool leaveOpen = false)
+                lock (_lock)
+                    _pos = value;
+            }
+        }
+        public virtual long BytePosition => (long) Math.Floor(Position / 8d);
+
+        public BitWriter(Stream stream, Endianness endianness = Endianness.LittleEndian, bool orderLocked = true,
+            bool leaveOpen = false, bool positionLocked = true, long startOffset = 0)
         {
             if (!stream.CanWrite)
                 throw new ArgumentException("Stream is not writeable", nameof(stream));
@@ -48,11 +57,12 @@ namespace RakDotNet.IO
             _stream = stream;
             _leaveOpen = leaveOpen;
             _orderLocked = orderLocked;
+            _positionLocked = positionLocked;
             _lock = new object();
 
             _endianness = endianness;
             _disposed = false;
-            _pos = 0;
+            _pos = startOffset;
         }
 
         protected virtual void Dispose(bool disposing)
@@ -120,7 +130,7 @@ namespace RakDotNet.IO
             }
         }
 
-        public virtual int Write(ReadOnlySpan<byte> buf, int bits)
+        public virtual int Write(Span<byte> buf, int bits)
         {
             // offset in bits, in case we're not starting on the 8th (i = 7) bit
             var bitOffset = (byte)(_pos & 7);
@@ -133,6 +143,11 @@ namespace RakDotNet.IO
 
             // get size of output buffer
             var bufSize = (int)Math.Ceiling(bits / 8d);
+
+            // swap endianness in case we're not using same endianness as host
+            if ((_endianness != Endianness.LittleEndian && BitConverter.IsLittleEndian) ||
+                (_endianness != Endianness.BigEndian && !BitConverter.IsLittleEndian))
+                buf.Reverse();
 
             // lock the read so we don't mess up other calls
             lock (_lock)
@@ -176,11 +191,6 @@ namespace RakDotNet.IO
                         bytes[i] <<= (-bits & 7);
                 }
 
-                // swap endianness in case we're not using same endianness as host
-                if ((_endianness != Endianness.LittleEndian && BitConverter.IsLittleEndian) ||
-                    (_endianness != Endianness.BigEndian && !BitConverter.IsLittleEndian))
-                    bytes.Reverse();
-
                 // write the buffer
                 _stream.Write(bytes);
 
@@ -191,8 +201,14 @@ namespace RakDotNet.IO
             return bufSize;
         }
 
-        public virtual int Write(Span<byte> buf, int bits)
-            => Write((ReadOnlySpan<byte>)buf, bits);
+        [Obsolete("Write has been changed to use a regular Span instead of a ReadOnlySpan in order to fix endianness swapping, please only use this method if you absolutely cannot pass a regular Span")]
+        public virtual int Write(ReadOnlySpan<byte> buf, int bits)
+        {
+            Span<byte> mutable = stackalloc byte[buf.Length];
+            buf.CopyTo(mutable);
+
+            return Write(buf, bits);
+        }
 
         public virtual int Write(byte[] buf, int index, int length, int bits)
         {
@@ -202,26 +218,56 @@ namespace RakDotNet.IO
             if (index > length)
                 throw new ArgumentOutOfRangeException(nameof(index), "Index exceeds buffer length");
 
-            return Write(new ReadOnlySpan<byte>(buf, index, length), bits);
+            return Write(new Span<byte>(buf, index, length), bits);
         }
 
         public virtual int Write<T>(T val, int bits) where T : struct
         {
             var size = Marshal.SizeOf<T>();
-            var buf = new byte[size];
-            var ptr = Marshal.AllocHGlobal(size);
+            var ptr = IntPtr.Zero;
 
-            Marshal.StructureToPtr<T>(val, ptr, false);
-            Marshal.Copy(ptr, buf, 0, size);
-            Marshal.FreeHGlobal(ptr);
+            try
+            {
+                ptr = Marshal.AllocHGlobal(size);
+                Marshal.StructureToPtr(val, ptr, false);
 
-            return Write(new ReadOnlySpan<byte>(buf), bits);
+                var buf = new byte[size];
+                Marshal.Copy(ptr, buf, 0, size);
+
+                return Write(new Span<byte>(buf), bits);
+            }
+            finally
+            {
+                if (ptr != IntPtr.Zero)
+                    Marshal.FreeHGlobal(ptr);
+            }
         }
 
         public virtual int Write<T>(T val) where T : struct
-            => Write<T>(val, Marshal.SizeOf<T>() * 8);
+            => Write(val, Marshal.SizeOf<T>() * 8);
 
         public virtual void WriteSerializable(ISerializable serializable)
             => serializable.Serialize(this);
+
+        public virtual void AlignWrite(bool startAlign = false)
+        {
+            if ((_pos & 7) != 0)
+            {
+                lock (_lock)
+                {
+                    if (!startAlign)
+                    {
+                        _pos = (long)Math.Ceiling(_pos / 8d) * 8;
+
+                        _stream.Position++;
+                    }
+                    else
+                    {
+                        _pos = (long)Math.Floor(_pos / 8d) * 8;
+                    }
+                }
+            }
+        }
     }
 }
+

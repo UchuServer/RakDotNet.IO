@@ -31,6 +31,7 @@ namespace RakDotNet.IO
             }
         }
         public virtual bool CanChangeEndianness => !_orderLocked;
+        public virtual bool CanChangePosition => !_positionLocked;
         public virtual long Position
         {
             get => _pos;

@@ -26,14 +26,9 @@ namespace RakDotNet.IO
                 if (_orderLocked)
                     throw new InvalidOperationException("Endianness is fixed");
 
-                if (value != _endianness)
-                {
-                    // wait for read operations to complete so we don't mess them up
-                    lock (_lock)
-                    {
-                        _endianness = value;
-                    }
-                }
+                // wait for read operations to complete so we don't mess them up
+                lock (_lock)
+                    _endianness = value;
             }
         }
         public virtual bool CanChangeEndianness => !_orderLocked;

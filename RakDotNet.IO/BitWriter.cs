@@ -221,6 +221,7 @@ namespace RakDotNet.IO
             return Write(new Span<byte>(buf, index, length), bits);
         }
 
+        // FIXME: deal with endianness (eg https://stackoverflow.com/a/15020402)
         public virtual int Write<T>(T val, int bits) where T : struct
         {
             var size = Marshal.SizeOf<T>();
